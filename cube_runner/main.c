@@ -12,6 +12,41 @@
 #include<math.h>
 #include<GL/glut.h>
 
+#define BR_REDOVA_ZA_PREPREKE 550
+#define BR_STAT_KOCKI 1000
+#define BROJ_PREPREKA 2000
+
+static void on_keyboard(unsigned char key, int x, int y);
+static void on_timer(int value);
+static void on_reshape(int width, int height);
+static void on_release(unsigned char key,int x,int y);
+static void on_display(void);
+
+/*Promenljiva koje sluzi za kontrolisanje igre*/
+static int start = 0;
+
+//Promenljive zaduzene za kretanje i pozicioniranje objekta
+static int kretanja[] = {0, 0};
+static float x_koordinata = 0;
+static float z_koordinata = 0;
+static float kameraZ = -3;
+static float tackaPogleda_z = 7;
+
+
+//Struktura koja predstavlja sve prepreke
+typedef struct{
+    float x;
+    float y ;
+    float z;
+} Kocka;
+
+//Nizovi vezani za prepeke
+static int brKockiZaRed[BR_REDOVA_ZA_PREPREKE];
+Kocka prepreka[BROJ_PREPREKA];
+Kocka statPrep[BR_STAT_KOCKI];
+
+
+
 void on_reshape(int width, int height){
 
          glViewport(0, 0, width, height);
@@ -22,17 +57,20 @@ void on_reshape(int width, int height){
          gluPerspective(60, (float) width / height, 1, 100);
 }
 
+
 //funkcija za iscrtavanje staze
 void draw_road() {
     glPushMatrix();
 	    glColor3f(0.211,0.211,0.211);
-	    glScalef(10.0, .05, 25);
+	    glScalef(20.0, .05, 1000);
+        glTranslatef(0, 0, 1.96);
 	    glutSolidCube(4);
     glPopMatrix();
 }
 
-void on_display(void);
-            
+
+
+
 int main(int argc, char **argv){
 
          GLfloat light_ambient[] = { 0.1, 0.1, 0.1, 1 };
@@ -51,12 +89,13 @@ int main(int argc, char **argv){
 
          glutInitWindowSize(900, 900);
          glutInitWindowPosition(500, 500);
-         glutCreateWindow(argv[0]);
+         glutCreateWindow("My Cube Runner");
       
 
          glutReshapeFunc(on_reshape);
          glutDisplayFunc(on_display);
-	 
+	     glutKeyboardFunc(on_keyboard);
+         glutKeyboardUpFunc(on_release);
       
 
          glClearColor(0.5, 0.9, 0.4, 0);
@@ -80,11 +119,14 @@ int main(int argc, char **argv){
          glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,1);
          glEnable(GL_COLOR_MATERIAL);
 	
+         srand(time(NULL));
+ //        postavke();
          glutMainLoop();
 
 	
          return 0;
 }
+
 
 //iscrtavanje koordinatnog sistema za pomoc
 static void draw_coo(){
@@ -105,6 +147,435 @@ static void draw_coo(){
          glEnable(GL_LIGHTING);
 }
 
+void draw_ball(){
+
+        glEnable(GL_LIGHT0);
+        glEnable(GL_LIGHTING);
+
+
+        glPushMatrix();
+            glColor3f(0 ,0, 1);
+            glTranslatef(x_koordinata,0.5, z_koordinata);
+//             glScalef(0, 0, 10);
+            glutSolidCube(0.4);
+        glPopMatrix();
+
+
+        glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
+      
+}
+
+//Iscrtavanje prepreka(ceo nivo)
+void draw_squares(){
+    
+    glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHTING);
+    
+    int i = 0; //indeks pomeranja po X osi
+    int j = 20; //indeks pomeranja po Z osi
+    int t = 0; //indeks niza staticnih prepeka
+    float h = 0;
+    int m = 0;
+    
+//Zid po X osi    
+   for(i ; i<36 ; i++) { 
+    glPushMatrix();
+        glColor3f(1 ,0, 0);
+        glTranslatef(-4-i,0.5, j);
+        glutSolidCube(0.8);
+    glPopMatrix();
+    statPrep[t].x = -4-i;
+    statPrep[t].y = 0.5;
+    statPrep[t].z = j;
+    t++;
+    
+    glPushMatrix();
+        glColor3f(1 ,0, 0);
+        glTranslatef(4+i,0.5, j);
+        glutSolidCube(0.8);
+    glPopMatrix();
+    statPrep[t].x = 4+i;
+    statPrep[t].y = 0.5;
+    statPrep[t].z = j;
+    t++;
+   }
+
+   j++;
+   
+  //Suzavanje hodnika 
+    glPushMatrix();
+        glColor3f(1 ,0, 0);
+        glTranslatef(-4,0.5, j);
+        glutSolidCube(0.8);
+    glPopMatrix();
+    statPrep[t].x = -4;
+    statPrep[t].y = 0.5;
+    statPrep[t].z = j;
+    t++;
+    
+     glPushMatrix();
+        glColor3f(1 ,0, 0);
+        glTranslatef(-3.2,0.5, j);
+        glutSolidCube(0.8);
+    glPopMatrix();
+    statPrep[t].x = -3.2;
+    statPrep[t].y = 0.5;
+    statPrep[t].z = j;
+    t++;
+    
+    glPushMatrix();
+        glColor3f(1 ,0, 0);
+        glTranslatef(4,0.5, j);
+        glutSolidCube(0.8);
+    glPopMatrix();
+    statPrep[t].x = 4;
+    statPrep[t].y = 0.5;
+    statPrep[t].z = j;
+    t++;
+    
+    glPushMatrix();
+        glColor3f(1 ,0, 0);
+        glTranslatef(3.2,0.5, j);
+        glutSolidCube(0.8);
+    glPopMatrix();
+    statPrep[t].x = 3.2;
+    statPrep[t].y = 0.5;
+    statPrep[t].z = j;
+    t++;
+   
+    j++; 
+
+
+//Hodnik-pocetak   
+     for(j ; j<60 ; j++ ) { 
+    glPushMatrix();
+        glColor3f(1 ,0, 0);
+        glTranslatef(-3.2, 0.5, j);
+        glutSolidCube(0.8);
+    glPopMatrix();
+    statPrep[t].x = -3.2;
+    statPrep[t].y = 0.5;
+    statPrep[t].z = j;
+    t++;
+    
+    glPushMatrix();
+        glColor3f(1 ,0, 0);
+        glTranslatef(3.2, 0.5, j);
+        glutSolidCube(0.8);
+    glPopMatrix();
+    statPrep[t].x = 3.2;
+    statPrep[t].y = 0.5;
+    statPrep[t].z = j;
+    t++;
+   }
+//Hodnik-kraj
+
+//Iscrtavanje galerije 
+
+    //Zid po X osi    
+   for(i=0 ; i<36 ; i++) { 
+    glPushMatrix();
+        glColor3f(1 ,0, 0);
+        glTranslatef(-4-i,0.5, j);
+        glutSolidCube(0.8);
+    glPopMatrix();
+    statPrep[t].x = -4-i;
+    statPrep[t].y = 0.5;
+    statPrep[t].z = j;
+    t++;
+    
+    
+    glPushMatrix();
+        glColor3f(1 ,0, 0);
+        glTranslatef(4+i,0.5, j);
+        glutSolidCube(0.8);
+    glPopMatrix();
+    statPrep[t].x = 4+i;
+    statPrep[t].y = 0.5;
+    statPrep[t].z = j;
+    t++;
+    
+   }
+    
+    j++;
+     //ka spolja
+    int k=0; int b=0; int c=0;
+    for(int p = 0; p < 3 ; p++) {
+        
+      c = j+13;  b=j+6; k=0;
+    for(i = 0; j < c; j++, i++){
+        glPushMatrix();
+            glColor3f(1 ,0, 0);
+            glTranslatef(3 + i ,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = 3+i;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+        
+        
+        glPushMatrix();
+            glColor3f(1 ,0, 0);
+            glTranslatef(-3 - i ,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = -3-i;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+        
+        if(j > b){
+            glPushMatrix();
+                glColor3f(1 ,0, 0);
+                glTranslatef(0 + k ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = 0+k;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
+            
+            glPushMatrix();
+                glColor3f(1 ,0, 0);
+                glTranslatef(0 - k,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = 0-k;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
+            
+            k++;
+        }
+    }
+    
+      c = j+13; i-=2; b = j + 5; k-=2;
+    for(i; j < c; j++, i--){
+        glPushMatrix();
+            glColor3f(1 ,0, 0);
+            glTranslatef(3 + i ,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = 3+i;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+        
+        glPushMatrix();
+            glColor3f(1 ,0, 0);
+            glTranslatef(-3 - i ,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = -3-i;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+        
+        if(j < b){
+            glPushMatrix();
+                glColor3f(1 ,0, 0);
+                glTranslatef(0 + k ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = 0+k;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
+            
+            glPushMatrix();
+                glColor3f(1 ,0, 0);
+                glTranslatef(0 - k,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = 0-k;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
+            
+                k--;
+            }
+        }
+    }
+
+    //Kosina 
+    //Zid po X osi    
+   for(i=0 ; i<36 ; i++) { 
+    glPushMatrix();
+        glColor3f(1 ,0, 0);
+        glTranslatef(-4-i,0.5, j);
+        glutSolidCube(0.8);
+    glPopMatrix();
+        statPrep[t].x = -4-i;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+    
+    
+    glPushMatrix();
+        glColor3f(1 ,0, 0);
+        glTranslatef(4+i,0.5, j);
+        glutSolidCube(0.8);
+    glPopMatrix();
+        statPrep[t].x = 4+i;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+   }
+    
+    j++;
+    i=0;
+    h=i;
+    
+    for(int p = 0; p < 3; p++, h=h ){
+        
+         c = j+15;  
+    for(i ; j < c; j++, h+=0.5){
+        glPushMatrix();
+            glColor3f(1 ,0, 0);
+            glTranslatef(3.5 - h ,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = 3.5-h;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+        
+        glPushMatrix();
+            glColor3f(1 ,0, 0);
+            glTranslatef(-3.5 - h ,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = -3.5-h;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+    }
+    
+    h-=0.5;
+    c = j+5;
+    for(j; j < c; j++){
+         glPushMatrix();
+            glColor3f(1 ,0, 0);
+            glTranslatef(3.5 - h ,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = 3.5-h;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+        
+        glPushMatrix();
+            glColor3f(1 ,0, 0);
+            glTranslatef(-3.5 - h ,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = -3.5-h;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+    }
+    
+      c = j+15; i-=0.5;
+    for(i; j < c; j++, h=h-0.5){
+        glPushMatrix();
+            glColor3f(1 ,0, 0);
+            glTranslatef(3.5 - h ,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = 3.5-h;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+        
+        glPushMatrix();
+            glColor3f(1 ,0, 0);
+            glTranslatef(-3.5 - h ,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = -3.5-h;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+        
+        }
+        
+        c = j+5; h+=0.5;
+    for(j; j < c; j++){
+         glPushMatrix();
+            glColor3f(1 ,0, 0);
+            glTranslatef(3.5 + h ,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = 3.5+h;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+        
+        glPushMatrix();
+            glColor3f(1 ,0, 0);
+            glTranslatef(-3.5 + h ,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = -3.5+h;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+        }
+    }
+     j += 5;
+}
+
+
+
+//FUNKCIJE NA TASTATURI************************************
+static void on_keyboard(unsigned char key, int x, int y){
+    
+    switch (key) {
+        /*Na esc dugme izlazi se iz igrice*/
+        case 27:
+            exit(0);
+            break;
+        case 'd':
+        case 'D':
+            kretanja[1] = 1;
+            break;
+        case 'a':
+        case 'A':
+            kretanja[0] = 1;
+            break;
+            
+        case 'w':
+        case 'W':
+            if(!start){
+                start = 1;
+                glutTimerFunc(20, on_timer, 0); 
+            }
+            break;                              
+    }
+}
+
+//kad se pusti taster za kretanje
+static void on_release(unsigned char key, int x, int y){
+    
+    switch (key){
+    case 'a':
+    case 'A':
+        kretanja[0] = 0;
+        break;
+    case 'd':
+    case 'D':
+        kretanja[1] = 0;
+        break;        
+    }
+}
+
+
+
+
+
+
+//prikaz na ekranu
 void on_display(void){
         
         GLfloat light_position[] = {0,1,0, 0 };
@@ -117,12 +588,49 @@ void on_display(void){
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
 	/* pogled kamere */
-	gluLookAt(0, 2, -7, 0, 0, 0, 0, 1, 0);	
+	gluLookAt(x_koordinata, 2.5, kameraZ, 
+              x_koordinata, 1, tackaPogleda_z, 
+              0, 1, 0);
+	
 	 
 	draw_coo();
-
+    draw_ball();
+    draw_squares();
 	draw_road();
 	
 
         glutSwapBuffers();
+}
+
+
+static void on_timer(int value){
+     
+    if(value != 0)
+        return;
+    
+
+    if( (int)ceil(z_koordinata) % 570 == 0)
+    {
+    //    postavke();
+        z_koordinata = 0;
+        kameraZ = -3;
+        tackaPogleda_z = 7;
+    }
+    
+    z_koordinata += 0.5;
+    kameraZ += 0.5;
+    tackaPogleda_z += 0.5;        
+             
+             
+    if( start )
+        glutTimerFunc(20, on_timer, 0);
+    
+    
+     if(kretanja[0] && x_koordinata < 36)
+         x_koordinata += 0.3;
+    
+     if(kretanja[1] && x_koordinata > -36)
+         x_koordinata -= 0.3;
+    
+    glutPostRedisplay();
 }
