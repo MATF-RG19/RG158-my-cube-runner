@@ -14,7 +14,7 @@
 
 #define BR_REDOVA_ZA_PREPREKE 550
 #define BR_STAT_KOCKI 1000
-#define BROJ_PREPREKA 2000
+#define BROJ_PREPREKA 5000
 
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_timer(int value);
@@ -44,6 +44,20 @@ typedef struct{
 static int brKockiZaRed[BR_REDOVA_ZA_PREPREKE];
 Kocka prepreka[BROJ_PREPREKA];
 Kocka statPrep[BR_STAT_KOCKI];
+
+
+//inicijalizacija prepreka
+static void postavke(){
+    int i;
+    for( i=0 ; i < BR_REDOVA_ZA_PREPREKE; i++)
+        brKockiZaRed[i] = (int)rand() % 30;
+    
+    for(i=0; i < BROJ_PREPREKA; i++) {
+        prepreka[i].x = -35 + ( (int)rand() % 70) ;
+//         prepreka[i].z = 45 + (int)rand() % 10;
+        prepreka[i].y = 0.5;
+    }
+}
 
 
 
@@ -120,7 +134,7 @@ int main(int argc, char **argv){
          glEnable(GL_COLOR_MATERIAL);
 	
          srand(time(NULL));
- //        postavke();
+         postavke();
          glutMainLoop();
 
 	
@@ -269,6 +283,27 @@ void draw_squares(){
     t++;
    }
 //Hodnik-kraj
+    j+=5;
+
+//Otvoren put - random iscrtavanje prepreka
+    i = 0;
+    int w=0;
+    
+    for(j, w; j<160; w++, j += 3){
+        int q = brKockiZaRed[w]+1;
+        for( q; q >= 0; q--, m++){
+            glPushMatrix();
+                glColor3f(1 ,0, 0);
+                glTranslatef( prepreka[m].x ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            
+            prepreka[m].z = j;
+        }
+    }
+    
+    
+    j++;
 
 //Iscrtavanje galerije 
 
@@ -398,6 +433,33 @@ void draw_squares(){
         }
     }
 
+    //Prostor za random grenerisane prepreke
+
+    j += 5;
+    
+//Otvoren put - random iscrtavanje prepreka
+    i = 0;
+     b=0;
+    
+    for(j, w; j<345; w++, j += 3){
+        int q = brKockiZaRed[w]+1;
+        for( q; q >= 0; q--, m++){
+            glPushMatrix();
+                glColor3f(1 ,0, 0);
+                glTranslatef( prepreka[m].x ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            
+            prepreka[m].z = j;
+        }
+    }
+
+    
+    j+=5;
+
+//kraj random prepreka
+
+
     //Kosina 
     //Zid po X osi    
    for(i=0 ; i<36 ; i++) { 
@@ -524,6 +586,24 @@ void draw_squares(){
         }
     }
      j += 5;
+
+    //Otvoren put - random iscrtavanje prepreka
+    i = 0;
+     b=0;
+    
+    for(j, w; j<571; w++, j += 3){
+        int q = brKockiZaRed[w]+1;
+        for( q; q >= 0; q--, m++){
+            glPushMatrix();
+                glColor3f(1 ,0, 0);
+                glTranslatef( prepreka[m].x ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            
+            prepreka[i].z = m;
+        }
+    }
+
 }
 
 
@@ -626,10 +706,10 @@ static void on_timer(int value){
         glutTimerFunc(20, on_timer, 0);
     
     
-     if(kretanja[0] && x_koordinata < 36)
+     if(kretanja[0] && x_koordinata < 39.4)
          x_koordinata += 0.3;
     
-     if(kretanja[1] && x_koordinata > -36)
+     if(kretanja[1] && x_koordinata > -39.4)
          x_koordinata -= 0.3;
     
     glutPostRedisplay();
