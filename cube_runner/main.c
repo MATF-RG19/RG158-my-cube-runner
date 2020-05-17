@@ -11,10 +11,11 @@
 #include<time.h>
 #include<math.h>
 #include<GL/glut.h>
+#include<string.h>
 
-#define BR_REDOVA_ZA_PREPREKE 550
+#define BR_REDOVA_ZA_PREPREKE 200
 #define BR_STAT_KOCKI 1000
-#define BROJ_PREPREKA 5000
+#define BROJ_PREPREKA 3000
 
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_timer(int value);
@@ -24,6 +25,8 @@ static void on_display(void);
 
 /*Promenljiva koje sluzi za kontrolisanje igre*/
 static int start = 0;
+static int score = 0;
+
 
 //Promenljive zaduzene za kretanje i pozicioniranje objekta
 static int kretanja[] = {0, 0};
@@ -31,6 +34,7 @@ static float x_koordinata = 0;
 static float z_koordinata = 0;
 static float kameraZ = -3;
 static float tackaPogleda_z = 7;
+static float brzina = 0.25;
 
 
 //Struktura koja predstavlja sve prepreke
@@ -45,6 +49,10 @@ static int brKockiZaRed[BR_REDOVA_ZA_PREPREKE];
 Kocka prepreka[BROJ_PREPREKA];
 Kocka statPrep[BR_STAT_KOCKI];
 
+//Funkcije za kontrolisanje kolizije
+static float rastojanje(Kocka koc);
+static void kolizija();
+
 
 //inicijalizacija prepreka
 static void postavke(){
@@ -54,8 +62,8 @@ static void postavke(){
     
     for(i=0; i < BROJ_PREPREKA; i++) {
         prepreka[i].x = -35 + ( (int)rand() % 70) ;
-//         prepreka[i].z = 45 + (int)rand() % 10;
         prepreka[i].y = 0.5;
+        prepreka[i].z = -1;
     }
 }
 
@@ -291,14 +299,14 @@ void draw_squares(){
     
     for(j, w; j<160; w++, j += 3){
         int q = brKockiZaRed[w]+1;
-        for( q; q >= 0; q--, m++){
+        for( q; q >= 0; q--){
             glPushMatrix();
                 glColor3f(1 ,0, 0);
                 glTranslatef( prepreka[m].x ,0.5, j);
                 glutSolidCube(0.8);
             glPopMatrix();
-            
             prepreka[m].z = j;
+            m++;
         }
     }
     
@@ -309,6 +317,8 @@ void draw_squares(){
 
     //Zid po X osi    
    for(i=0 ; i<36 ; i++) { 
+       if(i == 6)
+        continue;
     glPushMatrix();
         glColor3f(1 ,0, 0);
         glTranslatef(-4-i,0.5, j);
@@ -443,14 +453,14 @@ void draw_squares(){
     
     for(j, w; j<345; w++, j += 3){
         int q = brKockiZaRed[w]+1;
-        for( q; q >= 0; q--, m++){
+        for( q; q >= 0; q--){
             glPushMatrix();
                 glColor3f(1 ,0, 0);
                 glTranslatef( prepreka[m].x ,0.5, j);
                 glutSolidCube(0.8);
             glPopMatrix();
-            
             prepreka[m].z = j;
+            m++;
         }
     }
 
@@ -593,14 +603,14 @@ void draw_squares(){
     
     for(j, w; j<571; w++, j += 3){
         int q = brKockiZaRed[w]+1;
-        for( q; q >= 0; q--, m++){
+        for( q; q >= 0; q--){
             glPushMatrix();
                 glColor3f(1 ,0, 0);
                 glTranslatef( prepreka[m].x ,0.5, j);
                 glutSolidCube(0.8);
             glPopMatrix();
-            
-            prepreka[i].z = m;
+            prepreka[m].z = j;
+            m++;
         }
     }
 
@@ -631,9 +641,52 @@ static void on_keyboard(unsigned char key, int x, int y){
                 start = 1;
                 glutTimerFunc(20, on_timer, 0); 
             }
-            break;                              
+            break;    
+
+        case 'r':
+        case 'R':
+            score = 0;
+            start = 0;
+            x_koordinata = 0;
+            z_koordinata = 0;
+            brzina = 0.25;
+            kameraZ = -3;
+            tackaPogleda_z = 7;
+            glutPostRedisplay();
+            break;                          
     }
 }
+
+
+
+
+static float rastojanje(Kocka koc){
+    
+    float x = pow((koc.x - x_koordinata), 2);
+    float y = pow((koc.y - 0.5), 2);
+    float z = pow((koc.z - z_koordinata), 2);
+
+    return sqrt(x + y + z);
+}
+
+
+static void kolizija(){
+    int i;
+    
+    for(i=0; i < BROJ_PREPREKA; i++){
+        Kocka koc1 = prepreka[i]; 
+        Kocka koc2 = statPrep[i];
+        float u1 = rastojanje(koc1);
+        float u2 = rastojanje(koc2);
+        
+        if(u1 < 0.65  ||  u2 < 0.65 ){
+            start = 0; 
+            break;
+        }
+    }
+}
+
+
 
 //kad se pusti taster za kretanje
 static void on_release(unsigned char key, int x, int y){
@@ -672,6 +725,23 @@ void on_display(void){
               x_koordinata, 1, tackaPogleda_z, 
               0, 1, 0);
 	
+      /*Prikaz skora na ekranu*/
+    glPushMatrix();
+        glColor3f(0,0,0);
+        glRasterPos3f(x_koordinata + 5,  5, z_koordinata + 5);
+    
+        char score_display[50] = "SCORE: ";
+        char score_value[50];
+    
+        sprintf(score_value, " %d ", score);
+        strcat(score_display, score_value);
+        int len = (int)strlen(score_display);
+        int i;
+        for (i = 0; i < len; i++){
+            glutBitmapCharacter( GLUT_BITMAP_TIMES_ROMAN_24, score_display[i]);
+        }
+    
+    glPopMatrix();
 	 
 	draw_coo();
     draw_ball();
@@ -691,25 +761,34 @@ static void on_timer(int value){
 
     if( (int)ceil(z_koordinata) % 570 == 0)
     {
-    //    postavke();
+        postavke();
+        draw_squares();
         z_koordinata = 0;
         kameraZ = -3;
         tackaPogleda_z = 7;
+        
     }
     
-    z_koordinata += 0.5;
-    kameraZ += 0.5;
-    tackaPogleda_z += 0.5;        
+    if(score % 1200 == 0)
+        brzina += 0.05;
+
+    z_koordinata += brzina;
+    kameraZ += brzina;
+    tackaPogleda_z += brzina;        
              
+    
              
-    if( start )
+    if( start ) {
+        score += 1;
         glutTimerFunc(20, on_timer, 0);
+    }
     
-    
-     if(kretanja[0] && x_koordinata < 39.4)
+    kolizija();
+
+     if(kretanja[0] && x_koordinata < 39)
          x_koordinata += 0.3;
     
-     if(kretanja[1] && x_koordinata > -39.4)
+     if(kretanja[1] && x_koordinata > -39)
          x_koordinata -= 0.3;
     
     glutPostRedisplay();
