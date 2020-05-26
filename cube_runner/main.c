@@ -12,27 +12,56 @@
 #include<math.h>
 #include<GL/glut.h>
 #include<string.h>
+#include "image.h"
 
 #define BR_REDOVA_ZA_PREPREKE 200
 #define BR_STAT_KOCKI 1000
 #define BROJ_PREPREKA 3000
+
+//Boje za prepreke
+#define RED (glColor3f(1, 0, 0))
+#define CITY (glColor3f(1, 0, 1))
+#define YELLOW (glColor3f(1, 1, 0))
+#define LIME (glColor3f(0, 1 , 0))
+#define AQUA (glColor3f(0, 1 , 1))
+#define PINK (glColor3f(1, 0.08 , 0.588))
+#define LIGHT (glColor3f(1, 0.9 , 1))
+#define SAND (glColor3f(0.97, 0.55 , 0.38))
+#define BLUE (glColor3f(0, 0 , 0.82))
+
+
+/* Imena fajlova sa teksturama. */
+#define FILENAME0 "planete.bmp"
+#define FILENAME1 "put.bmp"
+#define FILENAME2 "endgame.bmp"
+#define FILENAME3 "startgame.bmp"
+
+/* Identifikatori tekstura. */
+static GLuint names[4];
+
+
 
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_timer(int value);
 static void on_reshape(int width, int height);
 static void on_release(unsigned char key,int x,int y);
 static void on_display(void);
+static void startgame();
+static void game_over();
+
+
 
 /*Promenljiva koje sluzi za kontrolisanje igre*/
 static int start = 0;
 static int score = 0;
+static int boja = 1;
 
 
 //Promenljive zaduzene za kretanje i pozicioniranje objekta
 static int kretanja[] = {0, 0};
 static float x_koordinata = 0;
-static float z_koordinata = 0;
-static float kameraZ = -3;
+static float z_koordinata = 1;
+static float kameraZ = -2;
 static float tackaPogleda_z = 7;
 static float brzina = 0.25;
 
@@ -83,6 +112,26 @@ void on_reshape(int width, int height){
 //funkcija za iscrtavanje staze
 void draw_road() {
     glPushMatrix();
+    
+        glBindTexture(GL_TEXTURE_2D, names[1]);
+        glEnable(GL_TEXTURE_2D);
+        
+        glBegin(GL_POLYGON);
+        glTranslatef(0 , 0, z_koordinata);
+			glTexCoord2f(0, 0);
+			glVertex3f(-40, 0.1, -3);
+			
+			glTexCoord2f(1, 0);
+			glVertex3f(40, 0.1, -3);
+			
+			glTexCoord2f(1, 1);
+			glVertex3f(40, 0.1, 720);
+			
+			glTexCoord2f(0, 1);
+			glVertex3f(-40, 0.1, 720);
+		glEnd();
+        glDisable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, 0);
 	    glColor3f(0.211,0.211,0.211);
 	    glScalef(20.0, .05, 1000);
         glTranslatef(0, 0, 1.96);
@@ -102,7 +151,7 @@ int main(int argc, char **argv){
          GLfloat ambient_coeffs[] = { 0.3, 0.7, 0.3, 1 };
          GLfloat diffuse_coeffs[] = { 0.2, 1, 0.2, 1 };
          GLfloat specular_coeffs[] = { 1, 1, 1, 1 };
-         GLfloat shininess = 30;
+         GLfloat shininess = 30;   
      
 
          glutInit(&argc, argv);
@@ -113,9 +162,93 @@ int main(int argc, char **argv){
          glutInitWindowPosition(500, 500);
          glutCreateWindow("My Cube Runner");
       
+         /*Objekat koji predstavlja teskturu ucitanu iz fajla*/
+         Image * image;
+
+         /*Ukljucuju se teksture.*/
+         glEnable(GL_TEXTURE_2D);
+
+         glTexEnvf(GL_TEXTURE_ENV,
+              GL_TEXTURE_ENV_MODE,
+              GL_REPLACE);
+
+          /*
+           *Inicijalizuje se objekat koji ce sadrzati teksture ucitane iz fajla*/
+         image = image_init(0, 0);
+
+         /*Generisu se identifikatori tekstura*/
+         glGenTextures(4, names);
+
+         /* Kreira se prva tekstura. */
+         image_read(image, FILENAME0);
+
+        glBindTexture(GL_TEXTURE_2D, names[0]);
+         glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_REPEAT);
+         glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_REPEAT);
+         glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+         glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+
+            /* Kreira se druga tekstura. */
+         image_read(image, FILENAME1);
+
+            glBindTexture(GL_TEXTURE_2D, names[1]);
+         glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_CLAMP);
+          glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_CLAMP);
+         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+          glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+
+                 /*Kreira se treca tekstura*/
+    image_read(image, FILENAME2);
+
+    glBindTexture(GL_TEXTURE_2D, names[2]);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+    
+    /*Kreira se cetvrta tekstura*/
+    image_read(image, FILENAME3);
+  
+    glBindTexture(GL_TEXTURE_2D, names[3]);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels); 
+
+         /* Iskljucujemo aktivnu teksturu */
+          glBindTexture(GL_TEXTURE_2D, 0);
+
+         /* Unistava se objekat za citanje tekstura iz fajla. */
+          image_done(image);
+
+
 
          glutReshapeFunc(on_reshape);
-         glutDisplayFunc(on_display);
+         glutDisplayFunc(startgame);
 	     glutKeyboardFunc(on_keyboard);
          glutKeyboardUpFunc(on_release);
       
@@ -143,6 +276,7 @@ int main(int argc, char **argv){
 	
          srand(time(NULL));
          postavke();
+         glutFullScreen();
          glutMainLoop();
 
 	
@@ -151,7 +285,7 @@ int main(int argc, char **argv){
 
 
 //iscrtavanje koordinatnog sistema za pomoc
-static void draw_coo(){
+/*static void draw_coo(){
          glDisable(GL_LIGHTING);
          glBegin(GL_LINES);
          glColor3f (1, 0, 0);
@@ -167,7 +301,7 @@ static void draw_coo(){
          glVertex3f(0, 0, 0);
          glEnd();
          glEnable(GL_LIGHTING);
-}
+}  */
 
 void draw_ball(){
 
@@ -178,8 +312,14 @@ void draw_ball(){
         glPushMatrix();
             glColor3f(0 ,0, 1);
             glTranslatef(x_koordinata,0.5, z_koordinata);
-//             glScalef(0, 0, 10);
-            glutSolidCube(0.4);
+            glScalef(1 , 0.5, 1);
+            glutSolidSphere(0.3, 50, 50);
+        glPopMatrix();
+
+        glPushMatrix();
+            glColor3f(0, 0 , 1);
+            glTranslatef(x_koordinata, 0.6, z_koordinata);
+            glutSolidSphere(0.18, 50, 50);
         glPopMatrix();
 
 
@@ -202,7 +342,20 @@ void draw_squares(){
 //Zid po X osi    
    for(i ; i<36 ; i++) { 
     glPushMatrix();
-        glColor3f(1 ,0, 0);
+        switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
         glTranslatef(-4-i,0.5, j);
         glutSolidCube(0.8);
     glPopMatrix();
@@ -212,7 +365,20 @@ void draw_squares(){
     t++;
     
     glPushMatrix();
-        glColor3f(1 ,0, 0);
+        switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
         glTranslatef(4+i,0.5, j);
         glutSolidCube(0.8);
     glPopMatrix();
@@ -226,7 +392,20 @@ void draw_squares(){
    
   //Suzavanje hodnika 
     glPushMatrix();
-        glColor3f(1 ,0, 0);
+        switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
         glTranslatef(-4,0.5, j);
         glutSolidCube(0.8);
     glPopMatrix();
@@ -236,7 +415,20 @@ void draw_squares(){
     t++;
     
      glPushMatrix();
-        glColor3f(1 ,0, 0);
+         switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
         glTranslatef(-3.2,0.5, j);
         glutSolidCube(0.8);
     glPopMatrix();
@@ -246,7 +438,20 @@ void draw_squares(){
     t++;
     
     glPushMatrix();
-        glColor3f(1 ,0, 0);
+         switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
         glTranslatef(4,0.5, j);
         glutSolidCube(0.8);
     glPopMatrix();
@@ -256,7 +461,20 @@ void draw_squares(){
     t++;
     
     glPushMatrix();
-        glColor3f(1 ,0, 0);
+         switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
         glTranslatef(3.2,0.5, j);
         glutSolidCube(0.8);
     glPopMatrix();
@@ -271,7 +489,20 @@ void draw_squares(){
 //Hodnik-pocetak   
      for(j ; j<60 ; j++ ) { 
     glPushMatrix();
-        glColor3f(1 ,0, 0);
+         switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
         glTranslatef(-3.2, 0.5, j);
         glutSolidCube(0.8);
     glPopMatrix();
@@ -281,7 +512,20 @@ void draw_squares(){
     t++;
     
     glPushMatrix();
-        glColor3f(1 ,0, 0);
+         switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
         glTranslatef(3.2, 0.5, j);
         glutSolidCube(0.8);
     glPopMatrix();
@@ -301,7 +545,20 @@ void draw_squares(){
         int q = brKockiZaRed[w]+1;
         for( q; q >= 0; q--){
             glPushMatrix();
-                glColor3f(1 ,0, 0);
+         switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
                 glTranslatef( prepreka[m].x ,0.5, j);
                 glutSolidCube(0.8);
             glPopMatrix();
@@ -317,10 +574,23 @@ void draw_squares(){
 
     //Zid po X osi    
    for(i=0 ; i<36 ; i++) { 
-       if(i == 6)
+       if(i == 11 || i == 12)
         continue;
     glPushMatrix();
-        glColor3f(1 ,0, 0);
+         switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
         glTranslatef(-4-i,0.5, j);
         glutSolidCube(0.8);
     glPopMatrix();
@@ -331,7 +601,20 @@ void draw_squares(){
     
     
     glPushMatrix();
-        glColor3f(1 ,0, 0);
+         switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
         glTranslatef(4+i,0.5, j);
         glutSolidCube(0.8);
     glPopMatrix();
@@ -350,7 +633,20 @@ void draw_squares(){
       c = j+13;  b=j+6; k=0;
     for(i = 0; j < c; j++, i++){
         glPushMatrix();
-            glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
             glTranslatef(3 + i ,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
@@ -361,7 +657,20 @@ void draw_squares(){
         
         
         glPushMatrix();
-            glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
             glTranslatef(-3 - i ,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
@@ -372,7 +681,20 @@ void draw_squares(){
         
         if(j > b){
             glPushMatrix();
-                glColor3f(1 ,0, 0);
+            switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
                 glTranslatef(0 + k ,0.5, j);
                 glutSolidCube(0.8);
             glPopMatrix();
@@ -382,7 +704,20 @@ void draw_squares(){
             t++;
             
             glPushMatrix();
-                glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
                 glTranslatef(0 - k,0.5, j);
                 glutSolidCube(0.8);
             glPopMatrix();
@@ -398,7 +733,20 @@ void draw_squares(){
       c = j+13; i-=2; b = j + 5; k-=2;
     for(i; j < c; j++, i--){
         glPushMatrix();
-            glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
             glTranslatef(3 + i ,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
@@ -408,7 +756,20 @@ void draw_squares(){
         t++;
         
         glPushMatrix();
-            glColor3f(1 ,0, 0);
+            switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
             glTranslatef(-3 - i ,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
@@ -419,7 +780,20 @@ void draw_squares(){
         
         if(j < b){
             glPushMatrix();
-                glColor3f(1 ,0, 0);
+            switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
                 glTranslatef(0 + k ,0.5, j);
                 glutSolidCube(0.8);
             glPopMatrix();
@@ -429,7 +803,20 @@ void draw_squares(){
             t++;
             
             glPushMatrix();
-                glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
                 glTranslatef(0 - k,0.5, j);
                 glutSolidCube(0.8);
             glPopMatrix();
@@ -455,7 +842,20 @@ void draw_squares(){
         int q = brKockiZaRed[w]+1;
         for( q; q >= 0; q--){
             glPushMatrix();
-                glColor3f(1 ,0, 0);
+            switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
                 glTranslatef( prepreka[m].x ,0.5, j);
                 glutSolidCube(0.8);
             glPopMatrix();
@@ -474,7 +874,20 @@ void draw_squares(){
     //Zid po X osi    
    for(i=0 ; i<36 ; i++) { 
     glPushMatrix();
-        glColor3f(1 ,0, 0);
+        switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
         glTranslatef(-4-i,0.5, j);
         glutSolidCube(0.8);
     glPopMatrix();
@@ -485,7 +898,20 @@ void draw_squares(){
     
     
     glPushMatrix();
-        glColor3f(1 ,0, 0);
+         switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
         glTranslatef(4+i,0.5, j);
         glutSolidCube(0.8);
     glPopMatrix();
@@ -504,7 +930,20 @@ void draw_squares(){
          c = j+15;  
     for(i ; j < c; j++, h+=0.5){
         glPushMatrix();
-            glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
             glTranslatef(3.5 - h ,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
@@ -514,7 +953,20 @@ void draw_squares(){
         t++;
         
         glPushMatrix();
-            glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
             glTranslatef(-3.5 - h ,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
@@ -528,7 +980,20 @@ void draw_squares(){
     c = j+5;
     for(j; j < c; j++){
          glPushMatrix();
-            glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
             glTranslatef(3.5 - h ,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
@@ -538,7 +1003,20 @@ void draw_squares(){
         t++;
         
         glPushMatrix();
-            glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
             glTranslatef(-3.5 - h ,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
@@ -551,7 +1029,20 @@ void draw_squares(){
       c = j+15; i-=0.5;
     for(i; j < c; j++, h=h-0.5){
         glPushMatrix();
-            glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
             glTranslatef(3.5 - h ,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
@@ -561,7 +1052,20 @@ void draw_squares(){
         t++;
         
         glPushMatrix();
-            glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
             glTranslatef(-3.5 - h ,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
@@ -575,7 +1079,20 @@ void draw_squares(){
         c = j+5; h+=0.5;
     for(j; j < c; j++){
          glPushMatrix();
-            glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
             glTranslatef(3.5 + h ,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
@@ -585,7 +1102,20 @@ void draw_squares(){
         t++;
         
         glPushMatrix();
-            glColor3f(1 ,0, 0);
+           switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
             glTranslatef(-3.5 + h ,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
@@ -605,7 +1135,20 @@ void draw_squares(){
         int q = brKockiZaRed[w]+1;
         for( q; q >= 0; q--){
             glPushMatrix();
-                glColor3f(1 ,0, 0);
+             switch (boja)
+        {
+        case (0): BLUE; break;
+        case (1): RED; break;
+        case (2): CITY; break;
+        case (3): YELLOW; break;
+        case (4): LIME; break;
+        case (5): AQUA; break;
+        case (6): PINK; break;
+        case (7): LIGHT; break;
+        case (8): SAND; break;
+        default:
+            break;
+        }
                 glTranslatef( prepreka[m].x ,0.5, j);
                 glutSolidCube(0.8);
             glPopMatrix();
@@ -639,6 +1182,7 @@ static void on_keyboard(unsigned char key, int x, int y){
         case 'W':
             if(!start){
                 start = 1;
+                glutDisplayFunc(on_display);
                 glutTimerFunc(20, on_timer, 0); 
             }
             break;    
@@ -647,11 +1191,13 @@ static void on_keyboard(unsigned char key, int x, int y){
         case 'R':
             score = 0;
             start = 0;
+            boja = 1;
             x_koordinata = 0;
-            z_koordinata = 0;
+            z_koordinata = 1;
             brzina = 0.25;
-            kameraZ = -3;
+            kameraZ = -2;
             tackaPogleda_z = 7;
+            glutDisplayFunc(on_display);
             glutPostRedisplay();
             break;                          
     }
@@ -681,6 +1227,7 @@ static void kolizija(){
         
         if(u1 < 0.65  ||  u2 < 0.65 ){
             start = 0; 
+            glutDisplayFunc(game_over);
             break;
         }
     }
@@ -727,7 +1274,7 @@ void on_display(void){
 	
       /*Prikaz skora na ekranu*/
     glPushMatrix();
-        glColor3f(0,0,0);
+        glColor3f(1,1,1);
         glRasterPos3f(x_koordinata + 5,  5, z_koordinata + 5);
     
         char score_display[50] = "SCORE: ";
@@ -740,10 +1287,36 @@ void on_display(void){
         for (i = 0; i < len; i++){
             glutBitmapCharacter( GLUT_BITMAP_TIMES_ROMAN_24, score_display[i]);
         }
-    
+    glPopMatrix();
+
+
+    /*Postavljamo pozadinu*/
+    glPushMatrix();
+        glRotatef(100,1,0,0);
+        glTranslatef(0 ,80 + z_koordinata , -20 );
+        glScalef(14,1,24);
+  
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, names[0]);
+	
+		glBegin(GL_POLYGON);
+			glTexCoord2f(0, 0);
+			glVertex3f(-10, 0, -5);
+			
+			glTexCoord2f(1, 0);
+			glVertex3f(10, 0, -5);
+			
+			glTexCoord2f(1, 3);
+			glVertex3f(10, 0, 5);
+			
+			glTexCoord2f(0, 3);
+			glVertex3f(-10, 0, 5);
+		glEnd();
+	
+        glBindTexture(GL_TEXTURE_2D, 0);
     glPopMatrix();
 	 
-	draw_coo();
+	//draw_coo();
     draw_ball();
     draw_squares();
 	draw_road();
@@ -766,6 +1339,7 @@ static void on_timer(int value){
         z_koordinata = 0;
         kameraZ = -3;
         tackaPogleda_z = 7;
+        boja = (boja + 1) % 9;
         
     }
     
@@ -792,4 +1366,94 @@ static void on_timer(int value){
          x_koordinata -= 0.3;
     
     glutPostRedisplay();
+}
+
+
+/*Funkcija kojom se postavlja startgame izgled ekrana*/
+void startgame(){
+    
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0, 3.5, 0,
+              0, 0, 0,
+              1, 0, 0);
+    
+    glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, names[3]);
+	
+		glBegin(GL_POLYGON);
+			glTexCoord2f(0, 0);
+			glVertex3f(-2, 0, -3);
+			
+			glTexCoord2f(0, 1);
+			glVertex3f(2, 0, -3);
+			
+			glTexCoord2f(1, 1);
+			glVertex3f(2, 0, 3);
+			
+			glTexCoord2f(1, 0);
+			glVertex3f(-2, 0, 3);
+		glEnd();
+        
+	glDisable(GL_TEXTURE_2D);
+    
+
+    glutSwapBuffers();
+	
+}
+
+/*Funkcija kojom se postavlja gameover izgled ekrana*/
+void game_over(){
+    
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    /*Pozicioniramo kameru na odgovarajucu poziciju*/
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0, 3.5, 0,
+              0, 0, 0,
+              1, 0, 0);
+    /*Postavljamo teksturu, tj sliku*/
+    glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, names[2]);
+	
+		glBegin(GL_POLYGON);
+			glTexCoord2f(0, 0);
+			glVertex3f(-2, 0, -3);
+			
+			glTexCoord2f(0, 1);
+			glVertex3f(2, 0, -3);
+			
+			glTexCoord2f(1, 1);
+			glVertex3f(2, 0, 3);
+			
+			glTexCoord2f(1, 0);
+			glVertex3f(-2, 0, 3);
+		glEnd();
+        
+	glDisable(GL_TEXTURE_2D);
+    
+    /*Ispisujemo score na ekran*/
+    
+    glPushMatrix();
+        glColor3f(1,1,1);
+        glRasterPos3f(0.3, 0.1, -1.3);
+        char score_display[50] = " ";
+        char score_value[50];
+        sprintf(score_value, " %d ", score);
+        strcat(score_display, score_value);
+
+        int len = (int)strlen(score_display);
+        int i;
+        for ( i = 0; i < len; i++){
+            glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, score_display[i]);
+        }
+    glPopMatrix();
+    
+    glutSwapBuffers();
+	
 }
