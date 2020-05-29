@@ -51,7 +51,7 @@ static void game_over();
 
 
 
-/*Promenljiva koje sluzi za kontrolisanje igre*/
+/*Promenljive koje sluze za kontrolisanje igre*/
 static int start = 0;
 static int score = 0;
 static int boja = 1;
@@ -63,7 +63,7 @@ static float x_koordinata = 0;
 static float z_koordinata = 1;
 static float kameraZ = -2;
 static float tackaPogleda_z = 7;
-static float brzina = 0.25;
+static float brzina = 0.2;
 
 
 //Struktura koja predstavlja sve prepreke
@@ -337,7 +337,7 @@ void draw_squares(){
     int j = 20; //indeks pomeranja po Z osi
     int t = 0; //indeks niza staticnih prepeka
     float h = 0;
-    int m = 0;
+    int m = 0; //indeks niza random prepreka
     
 //Zid po X osi    
    for(i ; i<36 ; i++) { 
@@ -624,6 +624,7 @@ void draw_squares(){
     t++;
     
    }
+    
     
     j++;
      //ka spolja
@@ -1194,7 +1195,7 @@ static void on_keyboard(unsigned char key, int x, int y){
             boja = 1;
             x_koordinata = 0;
             z_koordinata = 1;
-            brzina = 0.25;
+            brzina = 0.2;
             kameraZ = -2;
             tackaPogleda_z = 7;
             glutDisplayFunc(on_display);
