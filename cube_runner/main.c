@@ -12,41 +12,12 @@
 #include<math.h>
 #include<GL/glut.h>
 #include<string.h>
-#include "image.h"
+#include"image.h"
+#include"drawing.h"
 
 #define BR_REDOVA_ZA_PREPREKE 200
 #define BR_STAT_KOCKI 1000
 #define BROJ_PREPREKA 3000
-
-//Boje za prepreke
-#define RED1 (1)
-#define RED2 (0)
-#define RED3 (0)
-#define CITY1 (1)
-#define CITY2 (0)
-#define CITY3 (1)
-#define YELLOW1 (1)
-#define YELLOW2 (1)
-#define YELLOW3 (0)
-#define LIME1 (0)
-#define LIME2 (1)
-#define LIME3 (0)
-#define AQUA1 (0)
-#define AQUA2 (1)
-#define AQUA3 (1)
-#define PINK1 (1)
-#define PINK2 (0.08)
-#define PINK3 (0.588)
-#define LIGHT1 (1)
-#define LIGHT2 (0.9)
-#define LIGHT3 (1)
-#define SAND1 (0.97)
-#define SAND2 (0.55)
-#define SAND3 (0.38)
-#define BLUE1 (0)
-#define BLUE2 (0)
-#define BLUE3 (0.82)
-
 
 /* Imena fajlova sa teksturama. */
 #define FILENAME0 "planete.bmp"
@@ -58,7 +29,6 @@
 static GLuint names[4];
 
 
-
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_timer(int value);
 static void on_timer2(int value);
@@ -67,11 +37,6 @@ static void on_release(unsigned char key,int x,int y);
 static void on_display(void);
 static void startgame();
 static void game_over();
-static float boja_1(int boja);
-static float boja_2(int boja);
-static float boja_3(int boja);
-static void random_prepreke(int j, int w, int m );
-
 
 /*Promenljive koje sluze za kontrolisanje igre*/
 static int start = 0;
@@ -132,38 +97,6 @@ void on_reshape(int width, int height){
 }
 
 
-//funkcija za iscrtavanje staze
-void draw_road() {
-    glPushMatrix();
-        glBindTexture(GL_TEXTURE_2D, names[1]);
-        glEnable(GL_TEXTURE_2D);
-        
-        glBegin(GL_POLYGON);
-        glTranslatef(0 , 0, z_koordinata);
-		glTexCoord2f(0, 0);
-		glVertex3f(-40, 0.1, -3);
-			
-		glTexCoord2f(1, 0);
-		glVertex3f(40, 0.1, -3);
-			
-		glTexCoord2f(1, 1);
-		glVertex3f(40, 0.1, 720);
-			
-		glTexCoord2f(0, 1);
-		glVertex3f(-40, 0.1, 720);
-		glEnd();
-        glDisable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, 0);
-	    glColor3f(0.211,0.211,0.211);
-	    glScalef(20.0, .05, 1000);
-        glTranslatef(0, 0, 1.96);
-	    glutSolidCube(4);
-    glPopMatrix();
-}
-
-
-
-
 int main(int argc, char **argv){
 
     GLfloat light_ambient[] = { 0.1, 0.1, 0.1, 1 };
@@ -203,69 +136,67 @@ int main(int argc, char **argv){
     image_read(image, FILENAME0);
 
     glBindTexture(GL_TEXTURE_2D, names[0]);
-        glTexParameteri(GL_TEXTURE_2D,
-                GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D,
-                GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D,
-                GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D,
-                GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                 image->width, image->height, 0,
-                GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+    glTexParameteri(GL_TEXTURE_2D,
+            GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,
+            GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,
+            GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+            GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+            image->width, image->height, 0,
+            GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
 
     /* Kreira se druga tekstura. */
     image_read(image, FILENAME1);
 
     glBindTexture(GL_TEXTURE_2D, names[1]);
-        glTexParameteri(GL_TEXTURE_2D,
-                GL_TEXTURE_WRAP_S, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D,
-                GL_TEXTURE_WRAP_T, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                image->width, image->height, 0,
-                GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+    glTexParameteri(GL_TEXTURE_2D,
+            GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+            GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+            image->width, image->height, 0,
+            GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
 
     /*Kreira se treca tekstura*/
     image_read(image, FILENAME2);
 
     glBindTexture(GL_TEXTURE_2D, names[2]);
     glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_WRAP_S, GL_REPEAT);
+            GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_WRAP_T, GL_REPEAT);
+            GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                 image->width, image->height, 0,
-                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+            image->width, image->height, 0,
+            GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
     
     /*Kreira se cetvrta tekstura*/
     image_read(image, FILENAME3);
   
     glBindTexture(GL_TEXTURE_2D, names[3]);
     glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_WRAP_S, GL_CLAMP);
+            GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_WRAP_T, GL_CLAMP);
+            GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D,
-                    GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 
-                    image->width, image->height, 0, 
-                    GL_RGB, GL_UNSIGNED_BYTE, image->pixels); 
+            image->width, image->height, 0, 
+            GL_RGB, GL_UNSIGNED_BYTE, image->pixels); 
 
     /* Iskljucujemo aktivnu teksturu */
     glBindTexture(GL_TEXTURE_2D, 0);
 
     /* Unistava se objekat za citanje tekstura iz fajla. */
     image_done(image);
-
-
 
     glutReshapeFunc(on_reshape);
     glutDisplayFunc(startgame);
@@ -274,11 +205,8 @@ int main(int argc, char **argv){
       
 
     glClearColor(0.5, 0.9, 0.4, 0);
-    glEnable(GL_DEPTH_TEST);
-     	
+    glEnable(GL_DEPTH_TEST); 	
     glEnable(GL_LIGHTING);
-      
-
     glEnable(GL_LIGHT0);
 	glEnable(GL_COLOR_MATERIAL);      		
 
@@ -299,61 +227,7 @@ int main(int argc, char **argv){
     glutFullScreen();
     glutMainLoop();
 
-	
     return 0;
-}
-
-
-//iscrtavanje koordinatnog sistema za pomoc
-/*static void draw_coo(){
-         glDisable(GL_LIGHTING);
-         glBegin(GL_LINES);
-         glColor3f (1, 0, 0);
-         glVertex3f(-10, 0, 0);
-         glVertex3f(0, 0, 0);
-      
-         glColor3f (0, 1, 0);
-         glVertex3f(0, 10, 0);
-         glVertex3f(0, 0, 0);
-      
-         glColor3f (0, 0, 1);
-         glVertex3f(0, 0, -10);
-         glVertex3f(0, 0, 0);
-         glEnd();
-         glEnable(GL_LIGHTING);
-}  */
-
-void draw_ball(){
-
-        glEnable(GL_LIGHT0);
-        glEnable(GL_LIGHTING);
-
-
-        glPushMatrix();
-            glColor3f(0 ,0, 1);
-            glTranslatef(x_koordinata,0.5 + levitacija, z_koordinata);
-            glScalef(1 , 0.5, 1);
-            glRotatef((score % 360), 0, 1.0, 0);
-            glutSolidSphere(0.3, 50, 50);
-        glPopMatrix();
-
-        glPushMatrix();
-            glColor3f(0, 0 , 1);
-            glTranslatef(x_koordinata, 0.6 + levitacija , z_koordinata);
-            glRotatef(-(score % 360), 0, 1.0, 0);
-            glutSolidSphere(0.18, 50, 50);
-        glPopMatrix();
-
-        glPushMatrix();
-            glColor3f(1, 1, 1);
-            glTranslatef(x_koordinata, 0.7 + levitacija , z_koordinata-0.09);
-            glRotatef(-(score % 360), 0, 1.0, 0);
-            glutSolidSphere(0.05, 50, 50);
-        glPopMatrix();
-
-
-        glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
-      
 }
 
 //Iscrtavanje prepreka(ceo nivo)
@@ -369,31 +243,31 @@ void draw_squares(){
     int m = 0; //indeks niza random prepreka
     
 //Zid po X osi    
-   for(i ; i<36 ; i++) { 
-    glPushMatrix();
-        glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-        glTranslatef(-4-i,0.5, j);
-        glutSolidCube(0.8);
-    glPopMatrix();
-    statPrep[t].x = -4-i;
-    statPrep[t].y = 0.5;
-    statPrep[t].z = j;
-    t++;
+    for(i ; i<36 ; i++) { 
+        glPushMatrix();
+            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+            glTranslatef(-4-i,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = -4-i;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
     
-    glPushMatrix();
-        glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-        glTranslatef(4+i,0.5, j);
-        glutSolidCube(0.8);
-    glPopMatrix();
-    statPrep[t].x = 4+i;
-    statPrep[t].y = 0.5;
-    statPrep[t].z = j;
-    t++;
-   }
+        glPushMatrix();
+            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+            glTranslatef(4+i,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = 4+i;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+    }
 
-   j++;
+    j++;
    
-  //Suzavanje hodnika 
+//Suzavanje hodnika 
     glPushMatrix();
         glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
         glTranslatef(-4,0.5, j);
@@ -404,7 +278,7 @@ void draw_squares(){
     statPrep[t].z = j;
     t++;
     
-     glPushMatrix();
+    glPushMatrix();
         glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
         glTranslatef(-3.2,0.5, j);
         glutSolidCube(0.8);
@@ -438,35 +312,34 @@ void draw_squares(){
 
 
 //Hodnik-pocetak   
-     for(j ; j<60 ; j++ ) { 
-    glPushMatrix();
-        glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-        glTranslatef(-3.2, 0.5, j);
-        glutSolidCube(0.8);
-    glPopMatrix();
-    statPrep[t].x = -3.2;
-    statPrep[t].y = 0.5;
-    statPrep[t].z = j;
-    t++;
+    for(j ; j<60 ; j++ ) { 
+        glPushMatrix();
+            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+            glTranslatef(-3.2, 0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = -3.2;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
     
-    glPushMatrix();
-        glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-        glTranslatef(3.2, 0.5, j);
-        glutSolidCube(0.8);
-    glPopMatrix();
-    statPrep[t].x = 3.2;
-    statPrep[t].y = 0.5;
-    statPrep[t].z = j;
-    t++;
-   }
+        glPushMatrix();
+            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+            glTranslatef(3.2, 0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
+        statPrep[t].x = 3.2;
+        statPrep[t].y = 0.5;
+        statPrep[t].z = j;
+        t++;
+    }
+
 //Hodnik-kraj
     j+=5;
 
 //Otvoren put - random iscrtavanje prepreka
     i = 0;
-    int w=0;
-    
-//    random_prepreke(j, w, m);
+    int w=0;    
 
     for(j, w; j<160; w++, j += 5){
         int q = brKockiZaRed[w]+1;
@@ -481,149 +354,140 @@ void draw_squares(){
         }
     }
     
-    
     j++;
 
 //Iscrtavanje galerije 
 
-    //Zid po X osi    
+//Zid po X osi    
    for(i=0 ; i<36 ; i++) { 
-       if(i == 11 || i == 12)
-        continue;
-    glPushMatrix();
-        glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-        glTranslatef(-4-i,0.5, j);
-        glutSolidCube(0.8);
-    glPopMatrix();
-    statPrep[t].x = -4-i;
-    statPrep[t].y = 0.5;
-    statPrep[t].z = j;
-    t++;
-    
-    
-    glPushMatrix();
-        glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-        glTranslatef(4+i,0.5, j);
-        glutSolidCube(0.8);
-    glPopMatrix();
-    statPrep[t].x = 4+i;
-    statPrep[t].y = 0.5;
-    statPrep[t].z = j;
-    t++;
-    
-   }
-    
-    
-    j++;
-     //ka spolja
-    int k=0; int b=0; int c=0;
-    for(int p = 0; p < 3 ; p++) {
-        
-      c = j+13;  b=j+6; k=0;
-    for(i = 0; j < c; j++, i++){
+        if(i == 11 || i == 12)
+            continue;
         glPushMatrix();
             glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-            glTranslatef(3 + i ,0.5, j);
+            glTranslatef(-4-i,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
-        statPrep[t].x = 3+i;
+        statPrep[t].x = -4-i;
         statPrep[t].y = 0.5;
         statPrep[t].z = j;
         t++;
-        
-        
+    
+    
         glPushMatrix();
             glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-            glTranslatef(-3 - i ,0.5, j);
+            glTranslatef(4+i,0.5, j);
             glutSolidCube(0.8);
         glPopMatrix();
-        statPrep[t].x = -3-i;
+        statPrep[t].x = 4+i;
         statPrep[t].y = 0.5;
         statPrep[t].z = j;
         t++;
-        
-        if(j > b){
-            glPushMatrix();
-                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-                glTranslatef(0 + k ,0.5, j);
-                glutSolidCube(0.8);
-            glPopMatrix();
-            statPrep[t].x = 0+k;
-            statPrep[t].y = 0.5;
-            statPrep[t].z = j;
-            t++;
-            
-            glPushMatrix();
-                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-                glTranslatef(0 - k,0.5, j);
-                glutSolidCube(0.8);
-            glPopMatrix();
-            statPrep[t].x = 0-k;
-            statPrep[t].y = 0.5;
-            statPrep[t].z = j;
-            t++;
-            
-            k++;
-        }
     }
     
-      c = j+13; i-=2; b = j + 5; k-=2;
-    for(i; j < c; j++, i--){
-        glPushMatrix();
-            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-            glTranslatef(3 + i ,0.5, j);
-            glutSolidCube(0.8);
-        glPopMatrix();
-        statPrep[t].x = 3+i;
-        statPrep[t].y = 0.5;
-        statPrep[t].z = j;
-        t++;
-        
-        glPushMatrix();
-            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-            glTranslatef(-3 - i ,0.5, j);
-            glutSolidCube(0.8);
-        glPopMatrix();
-        statPrep[t].x = -3-i;
-        statPrep[t].y = 0.5;
-        statPrep[t].z = j;
-        t++;
-        
-        if(j < b){
+    j++;
+//ka spolja
+    int k=0; int b=0; int c=0;
+    for(int p = 0; p < 3 ; p++) {
+        c = j+13;  b=j+6; k=0;
+        for(i = 0; j < c; j++, i++){
             glPushMatrix();
                 glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-                glTranslatef(0 + k ,0.5, j);
+                glTranslatef(3 + i ,0.5, j);
                 glutSolidCube(0.8);
             glPopMatrix();
-            statPrep[t].x = 0+k;
+            statPrep[t].x = 3+i;
             statPrep[t].y = 0.5;
             statPrep[t].z = j;
             t++;
-            
+        
+        
             glPushMatrix();
                 glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-                glTranslatef(0 - k,0.5, j);
+                glTranslatef(-3 - i ,0.5, j);
                 glutSolidCube(0.8);
             glPopMatrix();
-            statPrep[t].x = 0-k;
+            statPrep[t].x = -3-i;
             statPrep[t].y = 0.5;
             statPrep[t].z = j;
             t++;
+        
+            if(j > b){
+                glPushMatrix();
+                    glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                    glTranslatef(0 + k ,0.5, j);
+                    glutSolidCube(0.8);
+                glPopMatrix();
+                statPrep[t].x = 0+k;
+                statPrep[t].y = 0.5;
+                statPrep[t].z = j;
+                t++;
             
+                glPushMatrix();
+                    glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                    glTranslatef(0 - k,0.5, j);
+                    glutSolidCube(0.8);
+                glPopMatrix();
+                statPrep[t].x = 0-k;
+                statPrep[t].y = 0.5;
+                statPrep[t].z = j;
+                t++;
+                k++;
+            }
+        }
+    
+        c = j+13; i-=2; b = j + 5; k-=2;
+        for(i; j < c; j++, i--){
+            glPushMatrix();
+                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                glTranslatef(3 + i ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = 3+i;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
+        
+            glPushMatrix();
+                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                glTranslatef(-3 - i ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = -3-i;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
+        
+            if(j < b){
+                glPushMatrix();
+                    glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                    glTranslatef(0 + k ,0.5, j);
+                    glutSolidCube(0.8);
+                glPopMatrix();
+                statPrep[t].x = 0+k;
+                statPrep[t].y = 0.5;
+                statPrep[t].z = j;
+                t++;
+            
+                glPushMatrix();
+                    glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                    glTranslatef(0 - k,0.5, j);
+                    glutSolidCube(0.8);
+                glPopMatrix();
+                statPrep[t].x = 0-k;
+                statPrep[t].y = 0.5;
+                statPrep[t].z = j;
+                t++;
                 k--;
             }
         }
     }
 
-    //Prostor za random grenerisane prepreke
-
+//Prostor za random grenerisane prepreke
     j += 5;
     
 //Otvoren put - random iscrtavanje prepreka
     i = 0;
-     b=0;
-    
-//    random_prepreke(j, w, m);
+    b=0;
 
     for(j, w; j<345; w++, j += 5){
         int q = brKockiZaRed[w]+1;
@@ -638,142 +502,138 @@ void draw_squares(){
         }
     }
 
-    
     j+=5;
 
 //kraj random prepreka
 
 
-    //Kosina 
-    //Zid po X osi    
-   for(i=0 ; i<36 ; i++) { 
-    glPushMatrix();
-        glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-        glTranslatef(-4-i,0.5, j);
-        glutSolidCube(0.8);
-    glPopMatrix();
+//Kosina 
+//Zid po X osi    
+    for(i=0 ; i<36 ; i++) { 
+        glPushMatrix();
+            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+            glTranslatef(-4-i,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
         statPrep[t].x = -4-i;
         statPrep[t].y = 0.5;
         statPrep[t].z = j;
         t++;
     
-    
-    glPushMatrix();
-        glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-        glTranslatef(4+i,0.5, j);
-        glutSolidCube(0.8);
-    glPopMatrix();
+        glPushMatrix();
+            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+            glTranslatef(4+i,0.5, j);
+            glutSolidCube(0.8);
+        glPopMatrix();
         statPrep[t].x = 4+i;
         statPrep[t].y = 0.5;
         statPrep[t].z = j;
         t++;
-   }
+    }
     
     j++;
     i=0;
     h=i;
     
     for(int p = 0; p < 3; p++, h=h ){
+        c = j+15;  
+        for(i ; j < c; j++, h+=0.5){
+            glPushMatrix();
+                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                glTranslatef(3.5 - h ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = 3.5-h;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
         
-         c = j+15;  
-    for(i ; j < c; j++, h+=0.5){
-        glPushMatrix();
-            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-            glTranslatef(3.5 - h ,0.5, j);
-            glutSolidCube(0.8);
-        glPopMatrix();
-        statPrep[t].x = 3.5-h;
-        statPrep[t].y = 0.5;
-        statPrep[t].z = j;
-        t++;
-        
-        glPushMatrix();
-            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-            glTranslatef(-3.5 - h ,0.5, j);
-            glutSolidCube(0.8);
-        glPopMatrix();
-        statPrep[t].x = -3.5-h;
-        statPrep[t].y = 0.5;
-        statPrep[t].z = j;
-        t++;
-    }
+            glPushMatrix();
+                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                glTranslatef(-3.5 - h ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = -3.5-h;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
+        }
     
-    h-=0.5;
-    c = j+5;
-    for(j; j < c; j++){
-         glPushMatrix();
-            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-            glTranslatef(3.5 - h ,0.5, j);
-            glutSolidCube(0.8);
-        glPopMatrix();
-        statPrep[t].x = 3.5-h;
-        statPrep[t].y = 0.5;
-        statPrep[t].z = j;
-        t++;
+        h-=0.5;
+        c = j+5;
+        for(j; j < c; j++){
+            glPushMatrix();
+                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                glTranslatef(3.5 - h ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = 3.5-h;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
         
-        glPushMatrix();
-            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-            glTranslatef(-3.5 - h ,0.5, j);
-            glutSolidCube(0.8);
-        glPopMatrix();
-        statPrep[t].x = -3.5-h;
-        statPrep[t].y = 0.5;
-        statPrep[t].z = j;
-        t++;
-    }
+            glPushMatrix();
+                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                glTranslatef(-3.5 - h ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = -3.5-h;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
+        }   
     
-      c = j+15; i-=0.5;
-    for(i; j < c; j++, h=h-0.5){
-        glPushMatrix();
-            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-            glTranslatef(3.5 - h ,0.5, j);
-            glutSolidCube(0.8);
-        glPopMatrix();
-        statPrep[t].x = 3.5-h;
-        statPrep[t].y = 0.5;
-        statPrep[t].z = j;
-        t++;
+        c = j+15; i-=0.5;
+        for(i; j < c; j++, h=h-0.5){
+            glPushMatrix();
+                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                glTranslatef(3.5 - h ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = 3.5-h;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
         
-        glPushMatrix();
-            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-            glTranslatef(-3.5 - h ,0.5, j);
-            glutSolidCube(0.8);
-        glPopMatrix();
-        statPrep[t].x = -3.5-h;
-        statPrep[t].y = 0.5;
-        statPrep[t].z = j;
-        t++;
-        
+            glPushMatrix();
+                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                glTranslatef(-3.5 - h ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = -3.5-h;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
         }
         
         c = j+5; h+=0.5;
-    for(j; j < c; j++){
-         glPushMatrix();
-            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-            glTranslatef(3.5 + h ,0.5, j);
-            glutSolidCube(0.8);
-        glPopMatrix();
-        statPrep[t].x = 3.5+h;
-        statPrep[t].y = 0.5;
-        statPrep[t].z = j;
-        t++;
+        for(j; j < c; j++){
+            glPushMatrix();
+                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                glTranslatef(3.5 + h ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = 3.5+h;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
         
-        glPushMatrix();
-            glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-            glTranslatef(-3.5 + h ,0.5, j);
-            glutSolidCube(0.8);
-        glPopMatrix();
-        statPrep[t].x = -3.5+h;
-        statPrep[t].y = 0.5;
-        statPrep[t].z = j;
-        t++;
+            glPushMatrix();
+                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
+                glTranslatef(-3.5 + h ,0.5, j);
+                glutSolidCube(0.8);
+            glPopMatrix();
+            statPrep[t].x = -3.5+h;
+            statPrep[t].y = 0.5;
+            statPrep[t].z = j;
+            t++;
         }
     }
-     j += 5;
+    j += 5;
 
-    //Otvoren put - random iscrtavanje prepreka
+//Otvoren put - random iscrtavanje prepreka
     i = 0;
-     b=0;
+    b=0;
     
     for(j, w; j<571; w++, j += 5){
         int q = brKockiZaRed[w]+1;
@@ -787,7 +647,6 @@ void draw_squares(){
             m++;
         }
     }
-
 }
 
 
@@ -890,21 +749,21 @@ static void on_release(unsigned char key, int x, int y){
 //prikaz na ekranu
 void on_display(void){
         
-        GLfloat light_position[] = {0,1,0, 0 };
+    GLfloat light_position[] = {0,1,0, 0 };
               
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
               
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
                 
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
 	/* pogled kamere */
 	gluLookAt(x_koordinata, 2.5, kameraZ, 
-              x_koordinata, 1, tackaPogleda_z, 
-              0, 1, 0);
+            x_koordinata, 1, tackaPogleda_z, 
+            0, 1, 0);
 	
-      /*Prikaz skora na ekranu*/
+    /*Prikaz skora na ekranu*/
     glPushMatrix();
         glColor3f(1,1,1);
         glRasterPos3f(x_koordinata + 5,  5, z_koordinata + 5);
@@ -949,12 +808,12 @@ void on_display(void){
     glPopMatrix();
 	 
 	//draw_coo();
-    draw_ball();
+    draw_ball(x_koordinata, levitacija, z_koordinata, score);
     draw_squares();
-	draw_road();
+	draw_road(names[1], z_koordinata);
 	
 
-        glutSwapBuffers();
+    glutSwapBuffers();
 }
 
 
@@ -997,11 +856,11 @@ static void on_timer(int value){
     
     kolizija();
 
-     if(kretanja[0] && x_koordinata < 39)
-         x_koordinata += 0.3;
+    if(kretanja[0] && x_koordinata < 39)
+        x_koordinata += 0.3;
     
-     if(kretanja[1] && x_koordinata > -39)
-         x_koordinata -= 0.3;
+    if(kretanja[1] && x_koordinata > -39)
+        x_koordinata -= 0.3;
     
     glutPostRedisplay();
 }
@@ -1016,8 +875,8 @@ void startgame(){
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(0, 3.5, 0,
-              0, 0, 0,
-              1, 0, 0);
+            0, 0, 0,
+            1, 0, 0);
     
     glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, names[3]);
@@ -1053,8 +912,8 @@ void game_over(){
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(0, 3.5, 0,
-              0, 0, 0,
-              1, 0, 0);
+            0, 0, 0,
+            1, 0, 0);
     /*Postavljamo teksturu, tj sliku*/
     glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, names[2]);
@@ -1096,87 +955,3 @@ void game_over(){
 	
 }
 
-float boja_1(int boja){
-     switch (boja)
-        {
-        case (0): return BLUE1; break;
-        case (1): return RED1; break;
-        case (2): return CITY1; break;
-        case (3): return YELLOW1; break;
-        case (4): return LIME1; break;
-        case (5): return AQUA1; break;
-        case (6): return PINK1; break;
-        case (7): return LIGHT1; break;
-        case (8): return SAND1; break;
-        default:
-            return CITY1; break;
-        }
-}
-
-float boja_2(int boja){
-     switch (boja)
-        {
-        case (0): return BLUE2; break;
-        case (1): return RED2; break;
-        case (2): return CITY2; break;
-        case (3): return YELLOW2; break;
-        case (4): return LIME2; break;
-        case (5): return AQUA2; break;
-        case (6): return PINK2; break;
-        case (7): return LIGHT2; break;
-        case (8): return SAND2; break;
-        default:
-            return CITY2; break;
-        }
-}
-
-float boja_3(int boja){
-     switch (boja)
-        {
-        case (0): return BLUE3; break;
-        case (1): return RED3; break;
-        case (2): return CITY3; break;
-        case (3): return YELLOW3; break;
-        case (4): return LIME3; break;
-        case (5): return AQUA3; break;
-        case (6): return PINK3; break;
-        case (7): return LIGHT3; break;
-        case (8): return SAND3; break;
-        default:
-            return CITY3; break;
-        }
-}
-
-void random_prepreke (int j, int w, int m) {
-    for(j, w; j<160; w++, j += 5){
-        int q = brKockiZaRed[w]+1;
-        for( q; q >= 0; q--){
-            glPushMatrix();
-                glColor3f(boja_1(boja), boja_2(boja), boja_3(boja));
-                glTranslatef( prepreka[m].x ,0.5, j);
-                glutSolidCube(0.8);
-            glPopMatrix();
-            prepreka[m].z = j;
-            m++;
-        }
-    }
-}
-
-static void on_timer2(int value){
-     
-    if(value != 0)
-        return;
-
-    int br = 0;
-    levIndex = 0.02;
-    levitacija = 0;
-    levitacija += levIndex;
-    glutTimerFunc(20, on_timer2, 0);
-    
-    if(levitacija == 1.0) {
-        glutDisplayFunc(game_over);
-        levIndex = 0.005;
-        levitacija = 0;
-    }
-    glutPostRedisplay();
-}
